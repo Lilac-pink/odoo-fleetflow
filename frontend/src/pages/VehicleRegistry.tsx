@@ -13,9 +13,13 @@ import { Plus, Pencil, Trash2, Search } from 'lucide-react';
 import type { Vehicle, VehicleType, VehicleStatus } from '@/types/fleet';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
-import { slideLeft, staggerContainer, shake, fadeScale } from '@/lib/animations';
+import { slideLeft, shake, fadeScale } from '@/lib/animations';
 
-const empty = { license_plate: '', make: '', model: '', year: new Date().getFullYear(), type: 'Truck' as VehicleType, max_load_kg: 0, odometer_km: 0, status: 'Available' as VehicleStatus, acquisition_cost: 0 };
+const empty = {
+  license_plate: '', make: '', model: '', year: new Date().getFullYear(),
+  type: 'Truck' as VehicleType, max_load_kg: 0, odometer_km: 0,
+  status: 'Available' as VehicleStatus, acquisition_cost: 0,
+};
 
 const VehicleRegistry = () => {
   const { vehicles, addVehicle, updateVehicle, deleteVehicle } = useFleet();
@@ -42,9 +46,7 @@ const VehicleRegistry = () => {
       if (editing) { await updateVehicle(editing.id, form); toast.success('Vehicle updated'); }
       else { await addVehicle(form); toast.success('Vehicle added'); }
       setSheetOpen(false);
-    } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : 'Save failed');
-    }
+    } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Save failed'); }
   };
 
   const confirmDelete = async () => {
@@ -88,7 +90,7 @@ const VehicleRegistry = () => {
               <AnimatePresence mode="popLayout">
                 {filtered.length === 0 ? (
                   <TableRow key="empty">
-                    <TableCell colSpan={9} className="text-center text-muted-foreground py-8">No vehicles found. Add your first vehicle.</TableCell>
+                    <TableCell colSpan={9} className="text-center text-muted-foreground py-8">No vehicles found.</TableCell>
                   </TableRow>
                 ) : filtered.map((v, i) => (
                   <motion.tr
@@ -111,10 +113,16 @@ const VehicleRegistry = () => {
                     <TableCell className="text-right space-x-1">
                       <Button variant="ghost" size="icon" onClick={() => openEdit(v)}><Pencil className="h-4 w-4" /></Button>
                       {(v.status === 'Available' || v.status === 'On Trip') && (
-                        <Button variant="ghost" size="sm" onClick={async () => { try { await updateVehicle(v.id, { status: 'Retired' }); toast.success('Vehicle retired'); } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Failed'); } }}>Retire</Button>
+                        <Button variant="ghost" size="sm" onClick={async () => {
+                          try { await updateVehicle(v.id, { status: 'Retired' }); toast.success('Vehicle retired'); }
+                          catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Failed'); }
+                        }}>Retire</Button>
                       )}
                       {v.status === 'Retired' && (
-                        <Button variant="ghost" size="sm" onClick={async () => { try { await updateVehicle(v.id, { status: 'Available' }); toast.success('Vehicle reactivated'); } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Failed'); } }}>Reactivate</Button>
+                        <Button variant="ghost" size="sm" onClick={async () => {
+                          try { await updateVehicle(v.id, { status: 'Available' }); toast.success('Vehicle reactivated'); }
+                          catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Failed'); }
+                        }}>Reactivate</Button>
                       )}
                       <Button variant="ghost" size="icon" onClick={() => setDeleteId(v.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                     </TableCell>
@@ -126,7 +134,6 @@ const VehicleRegistry = () => {
         </CardContent>
       </Card>
 
-      {/* Add/Edit Sheet */}
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent className="overflow-y-auto">
           <SheetHeader><SheetTitle>{editing ? 'Edit Vehicle' : 'New Vehicle'}</SheetTitle></SheetHeader>
@@ -158,7 +165,6 @@ const VehicleRegistry = () => {
         </SheetContent>
       </Sheet>
 
-      {/* Delete Confirm */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader><AlertDialogTitle>Delete Vehicle?</AlertDialogTitle><AlertDialogDescription>This action cannot be undone.</AlertDialogDescription></AlertDialogHeader>

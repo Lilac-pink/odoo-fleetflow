@@ -1,12 +1,15 @@
+import { useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { FleetProvider, useFleet } from "@/contexts/FleetContext";
 import { Layout } from "@/components/Layout";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import Login from "./pages/Login";
+import IntroScreen from "./pages/IntroScreen";
 import Dashboard from "./pages/Dashboard";
 import VehicleRegistry from "./pages/VehicleRegistry";
 import TripDispatcher from "./pages/TripDispatcher";
@@ -41,6 +44,30 @@ const RBACRoute = ({ path, children }: { path: string; children: React.ReactNode
 const AppRoutes = () => {
   const { user, authLoading } = useFleet();
 
+  // Show intro once per browser session — regardless of auth state
+  const [introSeen, setIntroSeen] = useState(
+    () => sessionStorage.getItem('fleetflow_intro_seen') === '1'
+  );
+
+  const handleIntroComplete = () => {
+    sessionStorage.setItem('fleetflow_intro_seen', '1');
+    setIntroSeen(true);
+    // Show toast for guests after intro finishes
+    if (!user) {
+      setTimeout(() => toast.info('Please log in to continue.'), 300);
+    }
+  };
+
+  // Show intro before anything else (every fresh session)
+  if (!introSeen) {
+    return (
+      <IntroScreen
+        videoSrc="/intro.mp4"
+        onComplete={handleIntroComplete}
+      />
+    );
+  }
+
   if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -50,6 +77,7 @@ const AppRoutes = () => {
   }
 
   if (!user) return <Login />;
+
   return (
     <Routes>
       <Route element={<Layout />}>

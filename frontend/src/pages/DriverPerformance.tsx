@@ -15,10 +15,13 @@ import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fadeUp, slideUp, shake } from '@/lib/animations';
 
-const emptyForm = { name: '', license_number: '', license_category: 'Truck' as VehicleType, license_expiry: '', safety_score: 5, duty_status: 'Off Duty' as DriverDutyStatus };
+const emptyForm = {
+  name: '', license_number: '', license_category: 'Truck' as VehicleType,
+  license_expiry: '', safety_score: 5, duty_status: 'Off Duty' as DriverDutyStatus,
+};
 
 const DriverPerformance = () => {
-  const { drivers, addDriver, updateDriver, deleteDriver, trips } = useFleet();
+  const { drivers, addDriver, updateDriver, deleteDriver } = useFleet();
   const [search, setSearch] = useState('');
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editing, setEditing] = useState<Driver | null>(null);
@@ -46,9 +49,7 @@ const DriverPerformance = () => {
       if (editing) { await updateDriver(editing.id, form); toast.success('Driver updated'); }
       else { await addDriver(form); toast.success('Driver added'); }
       setSheetOpen(false);
-    } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : 'Save failed');
-    }
+    } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Save failed'); }
   };
 
   const set = (k: string, v: unknown) => setForm(f => ({ ...f, [k]: v }));
@@ -165,14 +166,10 @@ const DriverPerformance = () => {
 
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
-          <AlertDialogHeader><AlertDialogTitle>Delete Driver?</AlertDialogTitle><AlertDialogDescription>This action cannot be undone.</AlertDialogDescription></AlertDialogHeader>
+          <AlertDialogHeader><AlertDialogTitle>Delete Driver?</AlertDialogTitle><AlertDialogDescription>This cannot be undone.</AlertDialogDescription></AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <motion.div
-              key={deleteTrigger}
-              variants={shake}
-              animate={deleteTrigger > 0 ? 'animate' : 'initial'}
-            >
+            <motion.div key={deleteTrigger} variants={shake} animate={deleteTrigger > 0 ? 'animate' : 'initial'}>
               <AlertDialogAction
                 className="bg-destructive hover:bg-destructive/90"
                 onClick={async () => {

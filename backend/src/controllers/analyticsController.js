@@ -47,6 +47,7 @@ const getAnalyticsMetrics = async (req, res) => {
     const roi = totalAcquisition._sum.acquisitionCost > 0
       ? (netProfit / totalAcquisition._sum.acquisitionCost) * 100
       : 0;
+    const safeRoi = Object.is(roi, -0) ? 0 : roi;
 
     // 4. Average Utilization Rate (from previous dashboard logic)
     const totalVehicles = await prisma.vehicle.count();
@@ -61,7 +62,7 @@ const getAnalyticsMetrics = async (req, res) => {
     res.json({
       totalFuelCost: totalFuel._sum.cost || 0,
       totalMaintenanceCost: totalMaintenance._sum.cost || 0,
-      fleetRoiPercent: roi.toFixed(2),
+      fleetRoiPercent: safeRoi.toFixed(2),
       averageUtilizationRate: utilizationRate,
       costPerKm: costPerKm.toFixed(2),
     });
@@ -127,6 +128,7 @@ const getVehicleRoi = async (req, res) => {
         v.expenses.reduce((sum, e) => sum + e.amount, 0);
 
       const roi = v.acquisitionCost > 0 ? ((totalRevenue - totalCosts) / v.acquisitionCost) * 100 : 0;
+      const safeRoi = Object.is(roi, -0) ? 0 : roi;
 
       return {
         vehicleId: v.id,
@@ -135,7 +137,7 @@ const getVehicleRoi = async (req, res) => {
         acquisitionCost: v.acquisitionCost,
         totalRevenue,
         totalCosts,
-        roiPercent: roi.toFixed(2),
+        roiPercent: safeRoi.toFixed(2),
       };
     });
 
@@ -250,7 +252,7 @@ const exportAnalyticsCsv = async (req, res) => {
 
         data.reverse(); // newest first
         headers = ['Month', 'FuelCost', 'MaintenanceCost', 'Revenue', 'NetProfit'];
-        filename = `fleetflow-monthly-summary-${new Date().toISOString().slice(0,10)}.csv`;
+        filename = `fleetflow-monthly-summary-${new Date().toISOString().slice(0, 10)}.csv`;
         break;
 
       case 'vehicle-roi':
@@ -284,7 +286,7 @@ const exportAnalyticsCsv = async (req, res) => {
         });
 
         headers = ['LicensePlate', 'Model', 'AcquisitionCost', 'TotalRevenue', 'TotalCosts', 'RoiPercent'];
-        filename = `fleetflow-vehicle-roi-${new Date().toISOString().slice(0,10)}.csv`;
+        filename = `fleetflow-vehicle-roi-${new Date().toISOString().slice(0, 10)}.csv`;
         break;
 
       case 'fuel-logs':
@@ -309,7 +311,7 @@ const exportAnalyticsCsv = async (req, res) => {
         }));
 
         headers = ['Date', 'Vehicle', 'Trip', 'Liters', 'Cost', 'DistanceKm', 'CostPerKm'];
-        filename = `fleetflow-fuel-logs-${new Date().toISOString().slice(0,10)}.csv`;
+        filename = `fleetflow-fuel-logs-${new Date().toISOString().slice(0, 10)}.csv`;
         break;
 
       default:

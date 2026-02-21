@@ -49,7 +49,6 @@ const Dashboard = () => {
         Command Center
       </motion.h1>
 
-      {/* KPI cards — staggered fade-up */}
       <motion.div
         className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
         variants={staggerContainer}
@@ -63,9 +62,7 @@ const Dashboard = () => {
       </motion.div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Trips Overview</CardTitle>
-        </CardHeader>
+        <CardHeader><CardTitle>Trips Overview</CardTitle></CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap gap-3">
             <div className="relative flex-1 min-w-[200px]">

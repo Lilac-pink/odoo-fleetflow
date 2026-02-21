@@ -39,6 +39,15 @@ interface VehicleRoi {
 const Analytics = () => {
   const { serviceLogs } = useFleet();
 
+  /** Safely format an ROI percent value that may arrive as a string like "-0.00" */
+  const formatROI = (val: string | number | undefined | null): string => {
+    const n = Number(val ?? 0);
+    if (!isFinite(n)) return '0.00';
+    // Collapse -0 to 0
+    const clean = Object.is(n, -0) ? 0 : n;
+    return clean.toFixed(2);
+  };
+
   // API-sourced state
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [fuelTrend, setFuelTrend] = useState<FuelEfficiencyPoint[]>([]);
@@ -134,7 +143,7 @@ const Analytics = () => {
 
       <motion.div className="grid gap-4 sm:grid-cols-3" variants={staggerContainer} initial="hidden" animate="visible">
         <KPICard title="Total Fuel Spend" value={`$${(metrics?.totalFuelCost ?? 0).toLocaleString()}`} icon={DollarSign} accent={1} />
-        <KPICard title="Fleet ROI" value={`${metrics?.fleetRoiPercent ?? 0}%`} icon={TrendingUp} accent={2} />
+        <KPICard title="Fleet ROI" value={`${formatROI(metrics?.fleetRoiPercent)}%`} icon={TrendingUp} accent={2} />
         <KPICard title="Utilization Rate" value={`${metrics?.averageUtilizationRate ?? 0}%`} icon={Gauge} accent={3} />
       </motion.div>
 
@@ -212,7 +221,7 @@ const Analytics = () => {
                   <TableCell>${v.totalCosts.toLocaleString()}</TableCell>
                   <TableCell>${v.acquisitionCost.toLocaleString()}</TableCell>
                   <TableCell className={Number(v.roiPercent) >= 0 ? 'text-success font-semibold' : 'text-destructive font-semibold'}>
-                    {v.roiPercent}%
+                    {formatROI(v.roiPercent)}%
                   </TableCell>
                 </TableRow>
               ))}

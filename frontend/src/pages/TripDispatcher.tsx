@@ -4,15 +4,15 @@ import { StatusPill } from '@/components/StatusPill';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Plus, Search, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
-import { fadeUp, staggerContainer, scalePop, slideUp } from '@/lib/animations';
+import { fadeUp, slideUp, scalePop } from '@/lib/animations';
 
 const TripDispatcher = () => {
   const { vehicles, drivers, trips, addTrip, dispatchTrip, completeTrip, cancelTrip } = useFleet();
@@ -32,9 +32,7 @@ const TripDispatcher = () => {
 
   const availableVehicles = vehicles.filter(v => v.status === 'Available');
   const availableDrivers = drivers.filter(d =>
-    d.duty_status !== 'Suspended' &&
-    d.duty_status !== 'Taking a Break' &&
-    new Date(d.license_expiry) > new Date()
+    d.duty_status !== 'Suspended' && d.duty_status !== 'Taking a Break' && new Date(d.license_expiry) > new Date()
   );
 
   const filtered = useMemo(() => {
@@ -58,19 +56,13 @@ const TripDispatcher = () => {
       await addTrip({ vehicle_id: vehicleId, driver_id: driverId, cargo_weight_kg: cargoWeight, origin, destination, estimated_fuel_cost: fuelCost, revenue });
       toast.success('Trip created as Draft');
       setSheetOpen(false);
-    } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : 'Failed to create trip');
-    }
+    } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Failed to create trip'); }
   };
 
   const handleComplete = async () => {
     if (!completeDialog) return;
-    try {
-      await completeTrip(completeDialog, finalOdo);
-      toast.success('Trip completed');
-    } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : 'Failed to complete trip');
-    }
+    try { await completeTrip(completeDialog, finalOdo); toast.success('Trip completed'); }
+    catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Failed to complete trip'); }
     setCompleteDialog(null);
   };
 
@@ -79,10 +71,8 @@ const TripDispatcher = () => {
       await dispatchTrip(id);
       setSuccessId(id);
       setTimeout(() => setSuccessId(null), 1800);
-      toast.success('Trip dispatched');
-    } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : 'Failed');
-    }
+      toast.success('Trip dispatched!');
+    } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Failed'); }
   };
 
   return (
@@ -118,15 +108,7 @@ const TripDispatcher = () => {
                 ) : filtered.map((t, i) => {
                   const v = vehicles.find(x => x.id === t.vehicle_id);
                   return (
-                    <motion.tr
-                      key={t.id}
-                      variants={fadeUp}
-                      initial="hidden"
-                      animate="visible"
-                      exit={{ opacity: 0 }}
-                      transition={{ delay: i * 0.05 }}
-                      className="border-b transition-colors hover:bg-muted/50"
-                    >
+                    <motion.tr key={t.id} variants={fadeUp} initial="hidden" animate="visible" exit={{ opacity: 0 }} transition={{ delay: i * 0.05 }} className="border-b transition-colors hover:bg-muted/50">
                       <TableCell className="font-medium">{t.id}</TableCell>
                       <TableCell>{v ? `${v.make} ${v.model}` : '–'}</TableCell>
                       <TableCell>{t.origin}</TableCell>
@@ -134,21 +116,17 @@ const TripDispatcher = () => {
                       <TableCell><StatusPill status={t.status} /></TableCell>
                       <TableCell className="text-right space-x-1">
                         {t.status === 'Draft' && (
-                          <Button size="sm" onClick={() => handleDispatchTrip(t.id)} className="relative overflow-hidden">
+                          <Button size="sm" onClick={() => handleDispatchTrip(t.id)}>
                             <AnimatePresence mode="wait">
-                              {successId === t.id ? (
-                                <motion.span key="check" variants={scalePop} initial="hidden" animate="visible" className="flex items-center gap-1">
-                                  <CheckCircle2 className="h-4 w-4" /> Done
-                                </motion.span>
-                              ) : (
-                                <motion.span key="label" initial={{ opacity: 1 }} exit={{ opacity: 0 }}>Dispatch</motion.span>
-                              )}
+                              {successId === t.id
+                                ? <motion.span key="check" variants={scalePop} initial="hidden" animate="visible" className="flex items-center gap-1"><CheckCircle2 className="h-4 w-4" /> Done</motion.span>
+                                : <motion.span key="label" initial={{ opacity: 1 }} exit={{ opacity: 0 }}>Dispatch</motion.span>}
                             </AnimatePresence>
                           </Button>
                         )}
                         {t.status === 'Dispatched' && <Button size="sm" variant="outline" onClick={() => { setFinalOdo(0); setCompleteDialog(t.id); }}>Complete</Button>}
                         {(t.status === 'Draft' || t.status === 'Dispatched') && (
-                          <Button size="sm" variant="ghost" onClick={async () => { try { await cancelTrip(t.id); toast.success('Trip cancelled'); } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Failed'); } }}>Cancel</Button>
+                          <Button size="sm" variant="ghost" onClick={async () => { try { await cancelTrip(t.id); toast.success('Cancelled'); } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Failed'); } }}>Cancel</Button>
                         )}
                       </TableCell>
                     </motion.tr>
@@ -160,7 +138,6 @@ const TripDispatcher = () => {
         </CardContent>
       </Card>
 
-      {/* New Trip Sheet */}
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent className="overflow-y-auto">
           <SheetHeader><SheetTitle>New Trip</SheetTitle></SheetHeader>
@@ -190,7 +167,6 @@ const TripDispatcher = () => {
         </SheetContent>
       </Sheet>
 
-      {/* Complete Dialog */}
       <Dialog open={!!completeDialog} onOpenChange={() => setCompleteDialog(null)}>
         <DialogContent>
           <DialogHeader><DialogTitle>Complete Trip</DialogTitle></DialogHeader>
