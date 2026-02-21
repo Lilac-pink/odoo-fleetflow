@@ -12,7 +12,7 @@ import {
 interface FleetContextType {
   user: User | null;
   authLoading: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string, role: UserRole) => Promise<boolean>;
   register: (name: string, email: string, password: string, role: UserRole) => Promise<void>;
   logout: () => void;
   vehicles: Vehicle[];
@@ -111,9 +111,10 @@ export const FleetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, []);
 
   // ── Auth ──────────────────────────────────────────────────────────────────
-  const login = useCallback(async (email: string, password: string): Promise<boolean> => {
+  const login = useCallback(async (email: string, password: string, role: UserRole): Promise<boolean> => {
+    const dbRole = UI_ROLE_TO_DB[role];
     const data = await api.post<{ token: string; user: Record<string, unknown> }>(
-      '/api/auth/login', { email, password }
+      '/api/auth/login', { email, password, role: dbRole }
     );
     localStorage.setItem('token', data.token);
     setUser(adaptUser(data.user));
@@ -125,7 +126,7 @@ export const FleetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   ) => {
     const dbRole = UI_ROLE_TO_DB[role];
     await api.post('/api/auth/register', { name, email, password, role: dbRole });
-    await login(email, password);
+    await login(email, password, role);
   }, [login]);
 
   const logout = useCallback(() => {

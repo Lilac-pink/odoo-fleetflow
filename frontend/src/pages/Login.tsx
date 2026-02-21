@@ -17,6 +17,7 @@ const Login = () => {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loginRole, setLoginRole] = useState<UserRole>('Fleet Manager');
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
 
@@ -33,7 +34,7 @@ const Login = () => {
     setLoginError('');
     setLoginLoading(true);
     try {
-      await login(email, password);
+      await login(email, password, loginRole);
       toast.success('Welcome back!');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Login failed';
@@ -122,16 +123,17 @@ const Login = () => {
                       <Input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} disabled={loginLoading} />
                     </div>
                   </div>
-
-                  {/* Demo role hint */}
-                  <div className="rounded-md border border-border bg-muted/40 p-3 text-xs text-muted-foreground space-y-1">
-                    <p className="font-semibold text-foreground">Demo accounts</p>
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
-                      <span>admin@fleetflow.local</span><span className="text-[#065A82] font-medium">Fleet Manager</span>
-                      <span>dispatcher@fleetflow.local</span><span className="text-[#065A82] font-medium">Dispatcher</span>
-                      <span>safety@fleetflow.local</span><span className="text-[#065A82] font-medium">Safety Officer</span>
-                    </div>
-                    <p className="mt-1">Password: <code className="font-mono">password123</code></p>
+                  <div className="space-y-2">
+                    <Label>Role</Label>
+                    <Select value={loginRole} onValueChange={v => setLoginRole(v as UserRole)} disabled={loginLoading}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Fleet Manager">Fleet Manager</SelectItem>
+                        <SelectItem value="Dispatcher">Dispatcher</SelectItem>
+                        <SelectItem value="Safety Officer">Safety Officer</SelectItem>
+                        <SelectItem value="Financial Analyst">Financial Analyst</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <motion.div whileTap={{ scale: 0.97 }}>
