@@ -32,7 +32,9 @@ export interface Driver {
   license_category: VehicleType;
   license_expiry: string;
   trips_completed: number;
-  safety_score: number;
+  safety_score: number;      // stored as 0-100
+  completion_rate: number;   // 0-100
+  complaints: number;
   duty_status: DriverDutyStatus;
   created_at: string;
 }

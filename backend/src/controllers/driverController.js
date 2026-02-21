@@ -27,6 +27,7 @@ const getAllDrivers = async (req, res) => {
       orderBy: { name: 'asc' },
       include: {
         user: { select: { email: true, role: true } }, // if linked
+        _count: { select: { trips: true } },
         trips: {
           select: { id: true, status: true },
           where: { status: { in: ['DISPATCHED', 'DRAFT'] } }, // active trips count
@@ -57,6 +58,7 @@ const getDriverById = async (req, res) => {
       where: { id: Number(id) },
       include: {
         user: true,
+        _count: { select: { trips: true } },
         trips: {
           include: {
             vehicle: { select: { licensePlate: true } },

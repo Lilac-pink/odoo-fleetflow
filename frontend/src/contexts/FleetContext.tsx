@@ -192,6 +192,8 @@ export const FleetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       licenseCategory: d.license_category,
       licenseExpiry: new Date(d.license_expiry).toISOString(),
       safetyScore: d.safety_score,
+      completionRate: d.completion_rate,
+      complaints: d.complaints,
       dutyStatus: dutyMap[d.duty_status] ?? 'OFF_DUTY',
     });
     await refreshDrivers();
@@ -207,6 +209,8 @@ export const FleetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (d.license_category !== undefined) payload.licenseCategory = d.license_category;
     if (d.license_expiry !== undefined) payload.licenseExpiry = new Date(d.license_expiry).toISOString();
     if (d.safety_score !== undefined) payload.safetyScore = d.safety_score;
+    if (d.completion_rate !== undefined) payload.completionRate = d.completion_rate;
+    if (d.complaints !== undefined) payload.complaints = d.complaints;
     if (d.duty_status !== undefined) payload.dutyStatus = dutyMap[d.duty_status];
     await api.put(`/api/drivers/${id}`, payload);
     await refreshDrivers();

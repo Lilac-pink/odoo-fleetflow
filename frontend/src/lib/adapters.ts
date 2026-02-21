@@ -97,8 +97,10 @@ export function adaptDriver(raw: any): Driver {
         license_expiry: raw.licenseExpiry
             ? new Date(raw.licenseExpiry).toISOString().slice(0, 10)
             : '',
-        trips_completed: raw.completionRate ?? 0,
+        trips_completed: raw._count?.trips ?? 0, // Fallback; we don't have this field directly, often joined via relation counting
         safety_score: raw.safetyScore ?? 0,
+        completion_rate: raw.completionRate ?? 0,
+        complaints: raw.complaints ?? 0,
         duty_status: DB_DUTY_STATUS[raw.dutyStatus] ?? 'Off Duty',
         created_at: raw.createdAt
             ? new Date(raw.createdAt).toISOString().slice(0, 10)

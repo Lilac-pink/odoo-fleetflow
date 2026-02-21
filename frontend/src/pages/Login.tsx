@@ -122,6 +122,18 @@ const Login = () => {
                       <Input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} disabled={loginLoading} />
                     </div>
                   </div>
+
+                  {/* Demo role hint */}
+                  <div className="rounded-md border border-border bg-muted/40 p-3 text-xs text-muted-foreground space-y-1">
+                    <p className="font-semibold text-foreground">Demo accounts</p>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
+                      <span>admin@fleetflow.local</span><span className="text-[#065A82] font-medium">Fleet Manager</span>
+                      <span>dispatcher@fleetflow.local</span><span className="text-[#065A82] font-medium">Dispatcher</span>
+                      <span>safety@fleetflow.local</span><span className="text-[#065A82] font-medium">Safety Officer</span>
+                    </div>
+                    <p className="mt-1">Password: <code className="font-mono">password123</code></p>
+                  </div>
+
                   <motion.div whileTap={{ scale: 0.97 }}>
                     <Button type="submit" className="w-full bg-[#065A82] hover:bg-[#1B3B6F] active:scale-95 transition-all" disabled={loginLoading}>
                       {loginLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Signing in…</> : 'Login'}

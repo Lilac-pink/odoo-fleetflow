@@ -19,7 +19,8 @@ import { fadeUp, slideUp, shake } from '@/lib/animations';
 
 const emptyForm = {
   name: '', license_number: '', license_category: 'Truck' as VehicleType,
-  license_expiry: '', safety_score: 5, duty_status: 'Off Duty' as DriverDutyStatus,
+  license_expiry: '', safety_score: 100, duty_status: 'Off Duty' as DriverDutyStatus,
+  completion_rate: 100, complaints: 0,
 };
 
 const DriverPerformance = () => {
@@ -53,7 +54,11 @@ const DriverPerformance = () => {
   const openNew = () => { setEditing(null); setForm(emptyForm); setSheetOpen(true); };
   const openEdit = (d: Driver) => {
     setEditing(d);
-    setForm({ name: d.name, license_number: d.license_number, license_category: d.license_category, license_expiry: d.license_expiry, safety_score: d.safety_score, duty_status: d.duty_status });
+    setForm({
+      name: d.name, license_number: d.license_number, license_category: d.license_category,
+      license_expiry: d.license_expiry, safety_score: d.safety_score, duty_status: d.duty_status,
+      completion_rate: d.completion_rate, complaints: d.complaints
+    });
     setSheetOpen(true);
   };
 
@@ -90,14 +95,15 @@ const DriverPerformance = () => {
       <TableCell>{totalTrips ? `${Math.round((d.trips_completed / totalTrips) * 100)}%` : '0%'}</TableCell>
       <TableCell>
         <motion.span
-          className={`font-semibold ${d.safety_score >= 7 ? 'text-success' : d.safety_score >= 4 ? 'text-warning' : 'text-destructive'}`}
+          className={`font-semibold ${d.safety_score >= 80 ? 'text-success' : d.safety_score >= 50 ? 'text-warning' : 'text-destructive'}`}
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: i * 0.04 + 0.2, type: 'spring', stiffness: 300 }}
         >
-          {d.safety_score}/10
+          {d.safety_score}%
         </motion.span>
       </TableCell>
+      <TableCell className={d.complaints > 0 ? "text-destructive font-medium" : "text-muted-foreground"}>{d.complaints}</TableCell>
       <TableCell><StatusPill status={d.duty_status} /></TableCell>
       <TableCell className="text-right space-x-1">
         <Button variant="ghost" size="icon" onClick={() => openEdit(d)}><Pencil className="h-4 w-4" /></Button>
@@ -142,7 +148,10 @@ const DriverPerformance = () => {
               <TableRow>
                 <TableHead>Name</TableHead><TableHead>License No.</TableHead><TableHead>Category</TableHead>
                 <TableHead>Expiry</TableHead><TableHead>Trips</TableHead><TableHead>Rate</TableHead>
-                <TableHead>Safety</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Actions</TableHead>
+                <TableHead>Safety</TableHead>
+                <TableHead>Complaints</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -183,7 +192,7 @@ const DriverPerformance = () => {
               <div className="space-y-2"><Label>Expiry Date *</Label><Input type="date" value={form.license_expiry} onChange={e => set('license_expiry', e.target.value)} /></div>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2"><Label>Safety Score (0–10)</Label><Input type="number" min={0} max={10} step={0.1} value={form.safety_score} onChange={e => set('safety_score', +e.target.value)} /></div>
+              <div className="space-y-2"><Label>Safety Score (0–100%)</Label><Input type="number" min={0} max={100} step={1} value={form.safety_score} onChange={e => set('safety_score', +e.target.value)} /></div>
               <div className="space-y-2"><Label>Duty Status</Label>
                 <Select value={form.duty_status} onValueChange={v => set('duty_status', v)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
@@ -195,6 +204,10 @@ const DriverPerformance = () => {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2"><Label>Completion Rate (%)</Label><Input type="number" min={0} max={100} step={0.1} value={form.completion_rate} onChange={e => set('completion_rate', +e.target.value)} /></div>
+              <div className="space-y-2"><Label>Complaints</Label><Input type="number" min={0} value={form.complaints} onChange={e => set('complaints', +e.target.value)} /></div>
             </div>
             <div className="flex gap-3 pt-4">
               <motion.div className="flex-1" whileTap={{ scale: 0.97 }}><Button className="w-full" onClick={save}>Save</Button></motion.div>
