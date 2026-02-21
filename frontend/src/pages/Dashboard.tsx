@@ -1,17 +1,20 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useFleet } from '@/contexts/FleetContext';
 import { KPICard } from '@/components/KPICard';
 import { StatusPill } from '@/components/StatusPill';
-import { Truck, Wrench, Gauge, Package, Search } from 'lucide-react';
+import { Truck, Wrench, Gauge, Package, Search, Plus } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { staggerContainer, fadeUp } from '@/lib/animations';
 
 const Dashboard = () => {
   const { vehicles, drivers, trips } = useFleet();
+  const navigate = useNavigate();
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [search, setSearch] = useState('');
@@ -40,15 +43,40 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-6">
-      <motion.h1
-        className="text-2xl font-bold"
-        initial={{ opacity: 0, y: -12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        Command Center
-      </motion.h1>
+      {/* Header + quick actions */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <motion.h1
+          className="text-2xl font-bold"
+          initial={{ opacity: 0, y: -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          Command Center
+        </motion.h1>
+        <div className="flex gap-2">
+          <motion.div whileTap={{ scale: 0.95 }}>
+            <Button
+              variant="outline"
+              onClick={() => navigate('/vehicles?open=1')}
+              className="gap-1.5"
+            >
+              <Plus className="h-4 w-4" />
+              New Vehicle
+            </Button>
+          </motion.div>
+          <motion.div whileTap={{ scale: 0.95 }}>
+            <Button
+              onClick={() => navigate('/trips?open=1')}
+              className="gap-1.5"
+            >
+              <Truck className="h-4 w-4" />
+              New Trip
+            </Button>
+          </motion.div>
+        </div>
+      </div>
 
+      {/* KPI cards */}
       <motion.div
         className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
         variants={staggerContainer}
@@ -115,7 +143,7 @@ const Dashboard = () => {
                         initial="hidden"
                         animate="visible"
                         exit={{ opacity: 0, y: 10 }}
-                        transition={{ delay: i * 0.05 }}
+                        transition={{ delay: i * 0.04 }}
                         className="border-b transition-colors hover:bg-muted/50"
                       >
                         <TableCell className="font-medium">{t.id}</TableCell>

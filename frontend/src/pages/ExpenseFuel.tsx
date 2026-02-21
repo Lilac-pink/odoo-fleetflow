@@ -1,5 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useFleet } from '@/contexts/FleetContext';
+import { TableToolbar, GroupHeaderRow } from '@/components/TableToolbar';
+import { useTableControls } from '@/hooks/useTableControls';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,12 +9,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { Plus, Search } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
+import type { ExpenseLog } from '@/types/fleet';
 
 const ExpenseFuel = () => {
   const { vehicles, drivers, trips, expenseLogs, addExpenseLog, serviceLogs } = useFleet();
-  const [search, setSearch] = useState('');
   const [sheetOpen, setSheetOpen] = useState(false);
   const [tripId, setTripId] = useState('');
   const [distance, setDistance] = useState(0);
@@ -25,10 +27,22 @@ const ExpenseFuel = () => {
   const completedTrips = trips.filter(t => t.status === 'Completed');
   const selectedTrip = trips.find(t => t.id === tripId);
 
-  const filtered = expenseLogs.filter(e => {
-    const q = search.toLowerCase();
-    const d = drivers.find(x => x.id === e.driver_id);
-    return !q || e.trip_id.toLowerCase().includes(q) || d?.name.toLowerCase().includes(q);
+  const tc = useTableControls<ExpenseLog>({
+    data: expenseLogs,
+    searchFn: (e, q) => {
+      const d = drivers.find(x => x.id === e.driver_id);
+      return e.trip_id.toLowerCase().includes(q) || (d?.name.toLowerCase().includes(q) ?? false);
+    },
+    sortFns: {
+      date: (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+      fuel_cost: (a, b) => a.fuel_cost - b.fuel_cost,
+      distance: (a, b) => a.distance_km - b.distance_km,
+    },
+    filterFns: {
+      vehicle: (e, val) => e.vehicle_id === val,
+    },
+    groupFn: (e, key) =>
+      key === 'vehicle' ? (vehicles.find(v => v.id === e.vehicle_id) ? `${vehicles.find(v => v.id === e.vehicle_id)!.make} ${vehicles.find(v => v.id === e.vehicle_id)!.model}` : 'Unknown') : '',
   });
 
   const vehicleSummary = useMemo(() => {
@@ -47,36 +61,68 @@ const ExpenseFuel = () => {
     setSheetOpen(false);
   };
 
+  const renderRow = (e: ExpenseLog, i: number) => {
+    const d = drivers.find(x => x.id === e.driver_id);
+    return (
+      <TableRow key={e.id}>
+        <TableCell className="font-medium">{e.trip_id}</TableCell>
+        <TableCell>{d?.name ?? '–'}</TableCell>
+        <TableCell>{e.distance_km} km</TableCell>
+        <TableCell>${e.fuel_cost.toLocaleString()}</TableCell>
+        <TableCell>{e.fuel_liters} L</TableCell>
+        <TableCell className="max-w-[200px] truncate">{e.notes}</TableCell>
+        <TableCell>{e.date}</TableCell>
+      </TableRow>
+    );
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Expense & Fuel Logging</h1>
+        <h1 className="text-2xl font-bold">Expense &amp; Fuel Logging</h1>
         <Button onClick={() => { setTripId(''); setDistance(0); setFuelCost(0); setFuelLiters(0); setRevenue(0); setNotes(''); setSheetOpen(true); }}>
           <Plus className="mr-2 h-4 w-4" />Add Expense
         </Button>
       </div>
 
       <Card>
-        <CardHeader><div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Search…" className="pl-9" value={search} onChange={e => setSearch(e.target.value)} /></div></CardHeader>
+        <CardHeader>
+          <TableToolbar
+            search={tc.search} onSearchChange={tc.setSearch}
+            sort={tc.sort} onToggleSort={tc.toggleSort}
+            sortOptions={[{ key: 'date', label: 'Date' }, { key: 'fuel_cost', label: 'Fuel Cost' }, { key: 'distance', label: 'Distance' }]}
+            filters={tc.filters} onFilterChange={tc.setFilter}
+            filterDefs={[
+              { key: 'vehicle', label: 'Vehicle', options: vehicles.map(v => ({ label: `${v.make} ${v.model}`, value: v.id })) },
+            ]}
+            groupBy={tc.groupBy} onGroupByChange={tc.setGroupBy}
+            groupByOptions={[{ key: 'vehicle', label: 'Vehicle' }]}
+            placeholder="Search expenses…"
+          />
+        </CardHeader>
         <CardContent className="overflow-x-auto">
           <Table>
-            <TableHeader><TableRow><TableHead>Trip ID</TableHead><TableHead>Driver</TableHead><TableHead>Distance</TableHead><TableHead>Fuel Cost</TableHead><TableHead>Notes</TableHead><TableHead>Date</TableHead></TableRow></TableHeader>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Trip ID</TableHead><TableHead>Driver</TableHead><TableHead>Distance</TableHead>
+                <TableHead>Fuel Cost</TableHead><TableHead>Liters</TableHead><TableHead>Notes</TableHead><TableHead>Date</TableHead>
+              </TableRow>
+            </TableHeader>
             <TableBody>
-              {filtered.length === 0 ? (
-                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No expenses found.</TableCell></TableRow>
-              ) : filtered.map(e => {
-                const d = drivers.find(x => x.id === e.driver_id);
-                return (
-                  <TableRow key={e.id}>
-                    <TableCell className="font-medium">{e.trip_id}</TableCell>
-                    <TableCell>{d?.name ?? '–'}</TableCell>
-                    <TableCell>{e.distance_km} km</TableCell>
-                    <TableCell>${e.fuel_cost.toLocaleString()}</TableCell>
-                    <TableCell className="max-w-[200px] truncate">{e.notes}</TableCell>
-                    <TableCell>{e.date}</TableCell>
-                  </TableRow>
-                );
-              })}
+              {tc.grouped ? (
+                tc.grouped.length === 0
+                  ? <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">No expenses found.</TableCell></TableRow>
+                  : tc.grouped.map(({ group, items }) => (
+                    <>
+                      <GroupHeaderRow key={`hdr-${group}`} label={group} count={items.length} colSpan={7} />
+                      {items.map((e, i) => renderRow(e, i))}
+                    </>
+                  ))
+              ) : (
+                tc.processed.length === 0
+                  ? <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">No expenses found.</TableCell></TableRow>
+                  : tc.processed.map((e, i) => renderRow(e, i))
+              )}
             </TableBody>
           </Table>
         </CardContent>
